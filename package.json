@@ -1,0 +1,45 @@
+{
+  "name": "async-mobx",
+  "version": "1.0.0",
+  "description": "Get async data for MobX",
+  "main": "index.js",
+  "module": "index.es6.js",
+  "private": true,
+  "scripts": {
+    "build": "bin/release -rollup",
+    "test": "jest",
+    "patch": "bin/release -patch -rollup",
+    "minor": "bin/release -minor -rollup",
+    "major": "bin/release -major -rollup"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/d8corp/async-mobx.git"
+  },
+  "keywords": [
+    "async",
+    "await",
+    "data",
+    "mobx",
+    "front-end"
+  ],
+  "author": "Mikhail Lysikov <d8corp@mail.ru>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/d8corp/async-mobx/issues"
+  },
+  "homepage": "https://github.com/d8corp/async-mobx",
+  "devDependencies": {
+    "@types/jest": "^26.0.0",
+    "jest": "^26.0.1",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.16.0",
+    "rollup-plugin-typescript2": "^0.27.1",
+    "ts-jest": "^26.1.0",
+    "typescript": "^3.9.5"
+  },
+  "dependencies": {
+    "mobx": ">=3",
+    "tslib": "^2.0.0"
+  }
+}

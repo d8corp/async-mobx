@@ -1,0 +1,28 @@
+{
+  "name": "async-mobx",
+  "version": "1.0.0",
+  "description": "Get async data for MobX",
+  "main": "index.js",
+  "module": "index.es6.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/d8corp/async-mobx.git"
+  },
+  "keywords": [
+    "async",
+    "await",
+    "data",
+    "mobx",
+    "front-end"
+  ],
+  "author": "Mikhail Lysikov <d8corp@mail.ru>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/d8corp/async-mobx/issues"
+  },
+  "homepage": "https://github.com/d8corp/async-mobx",
+  "dependencies": {
+    "mobx": ">=3",
+    "tslib": "^2.0.0"
+  }
+}

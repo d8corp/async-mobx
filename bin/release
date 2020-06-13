@@ -1,0 +1,118 @@
+#!/usr/bin/env node
+const fs = require('fs')
+const rimraf = require('rimraf')
+const {exec} = require('child_process')
+const packageJSON = require('../package')
+
+const deep = []
+
+const releaseDir = __dirname + '/../lib'
+
+start()
+
+async function start () {
+  consoleStart('deploying')
+  await removeFiles()
+  await rollUpUsage()
+  await Promise.all([
+    copyLicense(),
+    copyPackage(),
+    copyReadme()
+  ])
+  await publish()
+  consoleEnd('deploying')
+}
+// steps
+async function rollUpUsage () {
+  if (process.argv.includes('-rollup')) {
+    consoleStart('converting js for browsers')
+    await getPromise(resolve => exec(`rollup -c`, {}, resolve))
+    consoleEnd('converting js for browsers')
+  }
+}
+async function removeFiles () {
+  consoleStart('remove files')
+  await getPromise(resolve => rimraf(releaseDir, resolve))
+  await getPromise(resolve => fs.mkdir(releaseDir, resolve))
+  consoleEnd('remove files')
+}
+async function copyReadme () {
+  consoleStart('copying readme')
+  await getPromise(resolve => fs.copyFile(__dirname + '/../README.md', releaseDir + '/README.md', 'utf8', resolve))
+  consoleEnd('copying readme')
+}
+async function copyLicense () {
+  consoleStart('copying license')
+  await getPromise(resolve => fs.copyFile(__dirname + '/../LICENSE', releaseDir + '/LICENSE', 'utf8', resolve))
+  consoleEnd('copying license')
+}
+async function copyPackage () {
+  consoleStart('copying package.json')
+  const version = packageJSON.version.split('.')
+  if (process.argv.includes('-patch')) {
+    version[2]++
+  }
+  if (process.argv.includes('-minor')) {
+    version[1]++
+    version[2] = 0
+  }
+  if (process.argv.includes('-major')) {
+    version[1] = 0
+    version[2] = 0
+    version[0]++
+  }
+  packageJSON.version = version.join('.')
+  const updatingPackage = getPromise(resolve => fs.writeFile(__dirname + '/../package.json', JSON.stringify(packageJSON, null, 2) + '\n', 'utf8', resolve))
+  delete packageJSON.devDependencies
+  delete packageJSON.private
+  delete packageJSON.scripts
+  if (packageJSON.main) {
+    packageJSON.main = packageJSON.main.replace('src', '.')
+  }
+  await Promise.all([
+    updatingPackage,
+    getPromise(resolve => fs.writeFile(releaseDir + '/package.json', JSON.stringify(packageJSON, null, 2) + '\n', 'utf8', resolve))
+  ])
+  consoleEnd('copying package.json')
+}
+async function publish () {
+  if (process.argv.includes('-patch') || process.argv.includes('-minor') || process.argv.includes('-major')) {
+    consoleStart(`publishing v${packageJSON.version}`)
+    await getPromise(resolve => exec(`npm publish ${releaseDir}`, {}, resolve))
+    consoleEnd(`publishing v${packageJSON.version}`)
+  }
+}
+
+// utils
+function getPromise (callback) {
+  let resolve, reject
+  const promise = new Promise((res, rej) => {
+    resolve = res
+    reject = rej
+  })
+  callback((e, v) => e ? reject(e) : resolve(v))
+  return promise
+}
+function consoleStart (text, ...args) {
+  let prefix = ''
+  let i = 0
+  while (deep[i]) {
+    prefix += '|'
+    i++
+  }
+  deep[i] = text
+  console.log(prefix + '┌ start ' + text, ...args)
+}
+function consoleEnd (text, ...args) {
+  let prefix = ''
+  let i = 0
+  for (const value of deep) {
+    if (value === text) {
+      delete deep[i]
+      break
+    }
+    prefix += value ? '|' : ' '
+    i++
+  }
+  console.log(prefix + '└ end ' + text, ...args)
+}
