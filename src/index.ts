@@ -23,7 +23,7 @@ type AsyncOptions = {
 const AsyncBreak = Symbol('break')
 const ONCE = Symbol('once')
 
-class Async {
+class Async <V = any> {
   // TODO: add reset method
   @observable.shallow protected readonly options: AsyncOptions
   protected updated: boolean = true
@@ -87,11 +87,11 @@ class Async {
     this.call()
     return this.options.loaded || false
   }
-  @computed get default (): any {
+  @computed get default (): V {
     this.call()
     return typeof this.options.default === 'function' ? this.options.default(this) : this.options.default
   }
-  @computed get response (): any {
+  @computed get response (): V {
     this.call()
     return typeof this.options.response === 'function' ? this.options.response(this) : this.options.response
   }
@@ -99,7 +99,7 @@ class Async {
     this.call()
     return typeof this.options.error === 'function' ? this.options.error(this) : this.options.error
   }
-  @computed get value (): any {
+  @computed get value (): V {
     this.call()
     return 'response' in this.options ? this.response : this.default
   }
