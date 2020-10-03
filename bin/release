@@ -77,9 +77,10 @@ async function copyPackage () {
 }
 async function publish () {
   if (process.argv.includes('-patch') || process.argv.includes('-minor') || process.argv.includes('-major')) {
-    consoleStart(`publishing v${packageJSON.version}`)
+    const date = Date.now()
+    consoleStart(`publishing v${packageJSON.version} ${date}`)
     await getPromise(resolve => exec(`npm publish ${releaseDir}`, {}, resolve))
-    consoleEnd(`publishing v${packageJSON.version}`)
+    consoleEnd(`publishing v${packageJSON.version} ${date}`)
   }
 }
 
