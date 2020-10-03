@@ -20,7 +20,7 @@ declare type AsyncOptions = {
     reject?: AsyncReject;
 };
 declare const AsyncBreak: unique symbol;
-declare class Async {
+declare class Async<V = any> {
     protected readonly options: AsyncOptions;
     protected updated: boolean;
     protected timeout: number;
@@ -31,10 +31,10 @@ declare class Async {
     readonly reject: (error?: any) => this;
     get loading(): boolean;
     get loaded(): boolean;
-    get default(): any;
-    get response(): any;
+    get default(): V;
+    get response(): V;
     get error(): any;
-    get value(): any;
+    get value(): V;
     get events(): AsyncEventList;
     on(event: AsyncEventType | string, callback: AsyncEvent): this;
     once(event: AsyncEventType | string, callback: AsyncEvent): this;

@@ -1,6 +1,6 @@
 {
   "name": "async-mobx",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Get async data for MobX",
   "main": "index.js",
   "module": "index.es6.js",
