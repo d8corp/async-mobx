@@ -128,7 +128,7 @@ describe('Async', () => {
         expect(async.value).toBe(2)
       })
       it('sync', () => {
-        const async = new Async({
+        const async = new Async<any>({
           default: 1,
           request: resolve => resolve('test')
         })
@@ -149,7 +149,7 @@ describe('Async', () => {
         expect('response' in new Async()).toBe(true)
       })
       it('async', async () => {
-        const async = new Async({
+        const async = new Async<any>({
           default: 1,
           request: resolve => setTimeout(() => resolve('test'))
         })
@@ -1337,14 +1337,44 @@ describe('Async', () => {
   describe('types', () => {
     test('resolve', () => {
       const test = new Async<{test: number}>(resolve => resolve({test: 1}))
+      const test1 = new Async<{test: number}>(resolve => resolve(() => ({test: 1})))
+      const test2 = new Async<{test: number}>({
+        request: resolve => resolve({test: 1})
+      })
+      const test3 = new Async<{test: number}>({
+        request: resolve => resolve(() => ({test: 1}))
+      })
+      const test4 = new Async<{test: number}>({
+        response: {test: 1},
+        default: {test: 1}
+      })
+      const test5 = new Async<{test: number}>({
+        response: () => ({test: 1}),
+        default: () => ({test: 1})
+      })
       test.resolve({test: 1})
+      test1.resolve(() => ({test: 1}))
       test.on('resolve', value => value.test)
       test.once('resolve', value => value.test)
       test.trigger('resolve', {test: 2})
     })
     test('reject', () => {
       const test = new Async<string, {test: number}>((resolve, reject) => reject({test: 1}))
+      const test1 = new Async<string, {test: number}>((resolve, reject) => reject(() => ({test: 1})))
+      const test2 = new Async<string, {test: number}>({
+        request: (resolve, reject) => reject({test: 1})
+      })
+      const test3 = new Async<string, {test: number}>({
+        request: (resolve, reject) => reject(() => ({test: 1}))
+      })
+      const test4 = new Async<string, {test: number}>({
+        error: {test: 1}
+      })
+      const test5 = new Async<string, {test: number}>({
+        error: () => ({test: 1})
+      })
       test.reject({test: 1})
+      test1.reject(() => ({test: 1}))
       test.on('reject', value => value.test)
       test.once('reject', value => value.test)
       test.trigger('reject', {test: 2})

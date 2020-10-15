@@ -1,21 +1,23 @@
 import {computed, observable, action} from 'mobx'
 
-type AsyncResolve <V = any> = (value: V) => V
-type AsyncReject <E = any> = (error: E) => E
+type AsyncValue <V = any> = V | (() => V)
+
+type AsyncResolve <V = any> = (value: AsyncValue<V>) => V
+type AsyncReject <E = any> = (error: AsyncValue<E>) => E
 type AsyncFunction <V = any, E = any> = (resolve: AsyncResolve<V>, reject: AsyncReject<E>) => void
-type AsyncEventType = 'resolve' | 'reject' | 'update'
+
 type AsyncEvent <V = any> = (value: V, BREAK: symbol) => any
 type AsyncEvents = Set<AsyncEvent>
 type AsyncEventList = { [key: string]: AsyncEvents }
-type AsyncOptions = {
-  request?: AsyncFunction
+type AsyncOptions <V = any, E = any> = {
+  request?: AsyncFunction <V, E>
   timeout?: number
   loading?: boolean
   loaded?: boolean
   events?: AsyncEventList
-  default?: any | ((a: Async) => any)
-  response?: any | ((a: Async) => any)
-  error?: any | ((a: Async) => any)
+  default?: V | ((a: Async) => V)
+  response?: V | ((a: Async) => V)
+  error?: E | ((a: Async) => E)
   resolve?: AsyncResolve
   reject?: AsyncReject
 }
@@ -29,7 +31,7 @@ class Async <V = any, E = any> {
   protected updated: boolean = true
   protected timeout: number
 
-  constructor (options: AsyncFunction<V, E> | AsyncOptions = {}) {
+  constructor (options: AsyncFunction<V, E> | AsyncOptions <V, E> = {}) {
     this.options = typeof options === 'function' ? {request: options} : options
     this.update()
   }
@@ -54,7 +56,7 @@ class Async <V = any, E = any> {
     }
   }
 
-  @action readonly resolve = (response?: V): this => {
+  @action readonly resolve = (response?: AsyncValue<V>): this => {
     const {options} = this
     if (options.resolve) {
       response = options.resolve(response)
@@ -68,7 +70,7 @@ class Async <V = any, E = any> {
     return this
   }
 
-  @action readonly reject = (error?: E): this => {
+  @action readonly reject = (error?: AsyncValue<E>): this => {
     const {options} = this
     if (options.reject) {
       error = options.reject(error)
@@ -148,8 +150,8 @@ class Async <V = any, E = any> {
     return this
   }
 
-  trigger (event: 'resolve', details?: V): this
-  trigger (event: 'reject', details?: E): this
+  trigger (event: 'resolve', details?: AsyncValue<V>): this
+  trigger (event: 'reject', details?: AsyncValue<E>): this
   trigger (event: 'update'): this
   trigger (event: string, details?): this {
     const {options} = this
@@ -251,7 +253,6 @@ export {
   AsyncEventList,
   AsyncEvents,
   AsyncEvent,
-  AsyncEventType,
   AsyncFunction,
   AsyncReject,
   AsyncResolve,
