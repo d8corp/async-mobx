@@ -21,13 +21,14 @@ type AsyncOptions <V = any, E = any> = {
   error?: E | ((a: Async) => E)
   resolve?: AsyncResolve<V>
   reject?: AsyncReject<E>
+  keepResponse?: boolean
+  keepError?: boolean
 }
 
 const AsyncBreak = Symbol('break')
 const ONCE = Symbol('once')
 
 class Async <V = any, E = any> {
-  // TODO: add reset method
   @observable.shallow protected readonly options: AsyncOptions
   protected updated: boolean = true
   protected timeout: number
@@ -35,6 +36,12 @@ class Async <V = any, E = any> {
   constructor (options: AsyncFunction<V, E> | AsyncOptions <V, E> = {}) {
     this.options = typeof options === 'function' ? {request: options} : options
     this.update()
+  }
+
+  @action reset () {
+    const {options} = this
+    options.response = options.default
+    options.error = undefined
   }
 
   update (timeout: number = this.options.timeout): this {
@@ -65,7 +72,9 @@ class Async <V = any, E = any> {
     options.loading = false
     options.loaded = true
     options.response = response
-    options.error = undefined
+    if (!options.keepError) {
+      options.error = undefined
+    }
     this.timeout = Date.now()
     this.trigger('resolve', response)
     return this
@@ -78,6 +87,9 @@ class Async <V = any, E = any> {
     }
     options.loading = false
     options.error = error
+    if (!options.keepResponse) {
+      options.response = undefined
+    }
     this.trigger('reject', error)
     return this
   }
