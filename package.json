@@ -30,14 +30,14 @@
   },
   "homepage": "https://github.com/d8corp/async-mobx",
   "devDependencies": {
-    "@types/jest": "^26.0.0",
-    "jest": "^26.0.1",
+    "@types/jest": "^26.0.14",
+    "jest": "^26.5.3",
     "lodash": ">=4.17.19",
     "rimraf": "^3.0.2",
-    "rollup": "^2.16.0",
-    "rollup-plugin-typescript2": "^0.27.1",
-    "ts-jest": "^26.1.0",
-    "typescript": "^3.9.5"
+    "rollup": "^2.31.0",
+    "rollup-plugin-typescript2": "^0.27.3",
+    "ts-jest": "^26.4.1",
+    "typescript": "^4.0.3"
   },
   "dependencies": {
     "mobx": ">=3",
