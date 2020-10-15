@@ -4,7 +4,7 @@ type AsyncResolve <V = any> = (value: V) => V
 type AsyncReject <E = any> = (error: E) => E
 type AsyncFunction <V = any, E = any> = (resolve: AsyncResolve<V>, reject: AsyncReject<E>) => void
 type AsyncEventType = 'resolve' | 'reject' | 'update'
-type AsyncEvent = (value: any, BREAK: symbol) => any
+type AsyncEvent <V = any> = (value: V, BREAK: symbol) => any
 type AsyncEvents = Set<AsyncEvent>
 type AsyncEventList = { [key: string]: AsyncEvents }
 type AsyncOptions = {
@@ -111,7 +111,11 @@ class Async <V = any, E = any> {
     }
     return this.options.events
   }
-  on (event: AsyncEventType | string, callback: AsyncEvent): this {
+
+  on (event: 'resolve', callback: AsyncEvent<V>): this
+  on (event: 'reject', callback: AsyncEvent<E>): this
+  on (event: 'update', callback: AsyncEvent<undefined>): this
+  on (event: string, callback: AsyncEvent): this {
     const {events} = this
     if (!events[event]) {
       events[event] = new Set()
@@ -120,7 +124,11 @@ class Async <V = any, E = any> {
     events[event].add(callback)
     return this
   }
-  once (event: AsyncEventType | string, callback: AsyncEvent): this {
+
+  once (event: 'resolve', callback: AsyncEvent<V>): this
+  once (event: 'reject', callback: AsyncEvent<E>): this
+  once (event: 'update', callback: AsyncEvent<undefined>): this
+  once (event:string, callback: AsyncEvent): this {
     const {events} = this
     if (!events[event]) {
       events[event] = new Set()
@@ -129,13 +137,21 @@ class Async <V = any, E = any> {
     events[event].add(callback)
     return this
   }
-  off (event: AsyncEventType | string, callback: AsyncEvent): this {
+
+  off (event: 'resolve', callback: AsyncEvent<V>): this
+  off (event: 'reject', callback: AsyncEvent<E>): this
+  off (event: 'update', callback: AsyncEvent<undefined>): this
+  off (event: string, callback: AsyncEvent): this {
     const {options} = this
     if (!options.events || !options.events[event]) return this
     options.events[event].delete(callback)
     return this
   }
-  trigger (event: AsyncEventType | string, details?): this {
+
+  trigger (event: 'resolve', details?: V): this
+  trigger (event: 'reject', details?: E): this
+  trigger (event: 'update'): this
+  trigger (event: string, details?): this {
     const {options} = this
     if (!options.events || !options.events[event]) return this
     for (const listener of options.events[event]) {

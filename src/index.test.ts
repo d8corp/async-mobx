@@ -1336,12 +1336,18 @@ describe('Async', () => {
   })
   describe('types', () => {
     test('resolve', () => {
-      const test = new Async<string>(resolve => resolve('1'))
-      test.resolve('1')
+      const test = new Async<{test: number}>(resolve => resolve({test: 1}))
+      test.resolve({test: 1})
+      test.on('resolve', value => value.test)
+      test.once('resolve', value => value.test)
+      test.trigger('resolve', {test: 2})
     })
     test('reject', () => {
-      const test = new Async<string, number>((resolve, reject) => reject(1))
-      test.reject(1)
+      const test = new Async<string, {test: number}>((resolve, reject) => reject({test: 1}))
+      test.reject({test: 1})
+      test.on('reject', value => value.test)
+      test.once('reject', value => value.test)
+      test.trigger('reject', {test: 2})
     })
   })
 })
