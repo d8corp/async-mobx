@@ -1334,4 +1334,14 @@ describe('Async', () => {
       })
     })
   })
+  describe('types', () => {
+    test('resolve', () => {
+      const test = new Async<string>(resolve => resolve('1'))
+      test.resolve('1')
+    })
+    test('reject', () => {
+      const test = new Async<string, number>((resolve, reject) => reject(1))
+      test.reject(1)
+    })
+  })
 })

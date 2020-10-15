@@ -1,8 +1,8 @@
 import {computed, observable, action} from 'mobx'
 
-type AsyncResolve = (value: any) => any
-type AsyncReject = (error: any) => any
-type AsyncFunction = (resolve: AsyncResolve, reject: AsyncReject) => void
+type AsyncResolve <V = any> = (value: V) => V
+type AsyncReject <E = any> = (error: E) => E
+type AsyncFunction <V = any, E = any> = (resolve: AsyncResolve<V>, reject: AsyncReject<E>) => void
 type AsyncEventType = 'resolve' | 'reject' | 'update'
 type AsyncEvent = (value: any, BREAK: symbol) => any
 type AsyncEvents = Set<AsyncEvent>
@@ -23,13 +23,13 @@ type AsyncOptions = {
 const AsyncBreak = Symbol('break')
 const ONCE = Symbol('once')
 
-class Async <V = any> {
+class Async <V = any, E = any> {
   // TODO: add reset method
   @observable.shallow protected readonly options: AsyncOptions
   protected updated: boolean = true
   protected timeout: number
 
-  constructor (options: AsyncFunction | AsyncOptions = {}) {
+  constructor (options: AsyncFunction<V, E> | AsyncOptions = {}) {
     this.options = typeof options === 'function' ? {request: options} : options
     this.update()
   }
@@ -54,7 +54,7 @@ class Async <V = any> {
     }
   }
 
-  @action readonly resolve = (response?): this => {
+  @action readonly resolve = (response?: V): this => {
     const {options} = this
     if (options.resolve) {
       response = options.resolve(response)
@@ -68,7 +68,7 @@ class Async <V = any> {
     return this
   }
 
-  @action readonly reject = (error?): this => {
+  @action readonly reject = (error?: E): this => {
     const {options} = this
     if (options.reject) {
       error = options.reject(error)
@@ -95,7 +95,7 @@ class Async <V = any> {
     this.call()
     return typeof this.options.response === 'function' ? this.options.response(this) : this.options.response
   }
-  @computed get error (): any {
+  @computed get error (): E {
     this.call()
     return typeof this.options.error === 'function' ? this.options.error(this) : this.options.error
   }
