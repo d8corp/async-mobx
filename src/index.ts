@@ -2,8 +2,9 @@ import {computed, observable, action} from 'mobx'
 
 type AsyncValue <V = any> = V | (() => V)
 
-type AsyncResolve <V = any> = (value: AsyncValue<V>) => V
-type AsyncReject <E = any> = (error: AsyncValue<E>) => E
+type AsyncResolve <V = any> = (value: AsyncValue<V>) => AsyncValue<V>
+type AsyncReject <E = any> = (error: AsyncValue<E>) => AsyncValue<E>
+
 type AsyncFunction <V = any, E = any> = (resolve: AsyncResolve<V>, reject: AsyncReject<E>) => void
 
 type AsyncEvent <V = any> = (value: V, BREAK: symbol) => any
@@ -18,8 +19,8 @@ type AsyncOptions <V = any, E = any> = {
   default?: V | ((a: Async) => V)
   response?: V | ((a: Async) => V)
   error?: E | ((a: Async) => E)
-  resolve?: AsyncResolve
-  reject?: AsyncReject
+  resolve?: AsyncResolve<V>
+  reject?: AsyncReject<E>
 }
 
 const AsyncBreak = Symbol('break')

@@ -1352,6 +1352,15 @@ describe('Async', () => {
         response: () => ({test: 1}),
         default: () => ({test: 1})
       })
+      const test6 = new Async<{test: number}>({
+        resolve: () => ({test: 1})
+      })
+      const test7 = new Async<{test: number}>({
+        resolve: () => () => ({test: 1})
+      })
+      const test8 = new Async<{test: number}>({
+        resolve: value => value
+      })
       test.resolve({test: 1})
       test1.resolve(() => ({test: 1}))
       test.on('resolve', value => value.test)
@@ -1372,6 +1381,15 @@ describe('Async', () => {
       })
       const test5 = new Async<string, {test: number}>({
         error: () => ({test: 1})
+      })
+      const test6 = new Async<string, {test: number}>({
+        reject: () => ({test: 1})
+      })
+      const test7 = new Async<string, {test: number}>({
+        reject: () => () => ({test: 1})
+      })
+      const test8 = new Async<string, {test: number}>({
+        reject: value => value
       })
       test.reject({test: 1})
       test1.reject(() => ({test: 1}))
