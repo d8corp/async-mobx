@@ -1,48 +1,55 @@
-declare type AsyncResolve = (value: any) => any;
-declare type AsyncReject = (error: any) => any;
-declare type AsyncFunction = (resolve: AsyncResolve, reject: AsyncReject) => void;
+declare type AsyncValue<V = any> = V | (() => V);
+declare type AsyncResolve<V = any> = (value: AsyncValue<V>) => AsyncValue<V>;
+declare type AsyncReject<E = any> = (error: AsyncValue<E>) => AsyncValue<E>;
+declare type AsyncThen<V> = (value: V) => any;
+declare type AsyncFunction<V = any, E = any> = (resolve: AsyncResolve<V>, reject: AsyncReject<E>) => void;
+declare type AsyncEvent = () => any;
 declare type AsyncEventType = 'resolve' | 'reject' | 'update';
-declare type AsyncEvent = (value: any, BREAK: symbol) => any;
 declare type AsyncEvents = Set<AsyncEvent>;
 declare type AsyncEventList = {
     [key: string]: AsyncEvents;
 };
-declare type AsyncOptions = {
-    request?: AsyncFunction;
+declare type AsyncOptions<V = any, E = any> = {
+    request?: AsyncFunction<V, E>;
     timeout?: number;
     loading?: boolean;
     loaded?: boolean;
     events?: AsyncEventList;
-    default?: any | ((a: Async) => any);
-    response?: any | ((a: Async) => any);
-    error?: any | ((a: Async) => any);
-    resolve?: AsyncResolve;
-    reject?: AsyncReject;
+    default?: V | ((a: Async) => V);
+    response?: V | ((a: Async) => V);
+    error?: E | ((a: Async) => E);
+    resolve?: AsyncResolve<V>;
+    reject?: AsyncReject<E>;
+    keepResponse?: boolean;
+    keepError?: boolean;
 };
 declare const AsyncBreak: unique symbol;
-declare class Async<V = any> {
+declare class Async<V = any, E = any> {
     protected readonly options: AsyncOptions;
     protected updated: boolean;
     protected timeout: number;
-    constructor(options?: AsyncFunction | AsyncOptions);
+    constructor(request?: AsyncFunction<V, E>);
+    constructor(options?: AsyncOptions<V, E>);
+    reset(): void;
     update(timeout?: number): this;
     protected call(): void;
-    readonly resolve: (response?: any) => this;
-    readonly reject: (error?: any) => this;
+    readonly resolve: (response?: AsyncValue<V>) => this;
+    readonly reject: (error?: AsyncValue<E>) => this;
     get loading(): boolean;
     get loaded(): boolean;
     get default(): V;
     get response(): V;
-    get error(): any;
+    get error(): E;
     get value(): V;
     get events(): AsyncEventList;
+    private startEvent;
     on(event: AsyncEventType | string, callback: AsyncEvent): this;
     once(event: AsyncEventType | string, callback: AsyncEvent): this;
     off(event: AsyncEventType | string, callback: AsyncEvent): this;
-    trigger(event: AsyncEventType | string, details?: any): this;
-    then(resolve: AsyncResolve, reject?: boolean | AsyncReject, reusable?: boolean): Async;
-    catch(reject: AsyncReject, reusable?: boolean): Async;
-    finally(fin: AsyncResolve | AsyncReject, reusable?: boolean): Async;
+    trigger(event: AsyncEventType | string): this;
+    then(resolve?: AsyncThen<V>, reject?: AsyncThen<E>): Promise<V>;
+    catch(reject?: AsyncThen<E>): Promise<V>;
+    finally(fin?: AsyncThen<V> | AsyncThen<E>): Promise<V>;
 }
 export default Async;
-export { AsyncBreak, AsyncOptions, AsyncEventList, AsyncEvents, AsyncEvent, AsyncEventType, AsyncFunction, AsyncReject, AsyncResolve, };
+export { AsyncBreak, AsyncOptions, AsyncEventList, AsyncEvents, AsyncEvent, AsyncFunction, AsyncReject, AsyncResolve, };
