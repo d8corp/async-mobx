@@ -2,7 +2,7 @@
 [![NPM](https://img.shields.io/npm/v/async-mobx.svg)](https://github.com/d8corp/async-mobx/blob/master/CHANGELOG.md)
 [![downloads](https://img.shields.io/npm/dm/async-mobx.svg)](https://www.npmjs.com/package/async-mobx)
 [![license](https://img.shields.io/npm/l/async-mobx)](https://github.com/d8corp/async-mobx/blob/master/LICENSE)  
-Getting async data for [Mobx 3](https://mobx.js.org/README.html) and more.
+Getting async data for [Mobx 3+](https://mobx.js.org/README.html).
 ### Installation
 npm
 ```bash
