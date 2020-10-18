@@ -22,34 +22,24 @@ const promise = new Async((resolve, reject) => {
 })
 ```
 ### then, catch, finally
-`then`, `catch` and `finally` always return instance of `Async`
+`then`, `catch` and `finally` always return instance of `Promise`
 ```javascript
-const test = new Async().then() instanceof Async
+const test = new Async().then() instanceof Promise
 // test === true 
 ```
 Use `then`, `catch` and `finally` like for `Promise`
 ```javascript
 const promise = new Async(resolve => resolve(1))
 promise
-  .finally(value => console.log('finally', value))
   .then(value => console.log('then', value))
+  .finally(value => console.log('finally', value))
   .catch(value => console.log('catch', value))
 ```
-But we have one specific think for mobx, if you return a function to `resolve` or `reject` then the function will be called when you need to get the result
+We have one specific think for mobx, if you return a function to `resolve` or `reject` then the function will be called when you need to get the result
 ```javascript
 (async () => {
   let test = true
   const promise = new Async(resolve => resolve(() => test = false))
-  // test still equals true
-  await promise
-  // test is false
-})()
-```
-The same happens if you return a function in `then`, `catch` or `finally`
-```javascript
-(async () => {
-  let test = true
-  const promise = new Async(resolve => resolve()).then(() => () => test = false)
   // test still equals true
   await promise
   // test is false
