@@ -365,7 +365,7 @@ describe('Async', () => {
       test('resolve', () => {
         const async = new Async()
         let test = false
-        async.on('resolve', value => test = value)
+        async.on('resolve', () => test = async.value)
         expect(test).toBe(false)
         async.resolve('test')
         expect(test).toBe('test')
@@ -375,7 +375,7 @@ describe('Async', () => {
       test('reject', () => {
         const async = new Async()
         let test = false
-        async.on('reject', err => test = err)
+        async.on('reject', () => test = async.error)
         expect(test).toBe(false)
         async.reject('test')
         expect(test).toBe('test')
@@ -414,7 +414,7 @@ describe('Async', () => {
       test('resolve', () => {
         const async = new Async()
         let i = 0
-        async.once('resolve', value => i = value)
+        async.once('resolve', () => i = async.value)
         expect(i).toBe(0)
         async.resolve(1)
         expect(i).toBe(1)
@@ -424,7 +424,7 @@ describe('Async', () => {
       test('reject', () => {
         const async = new Async()
         let i = 0
-        async.once('reject', value => i = value)
+        async.once('reject', () => i = async.error)
         expect(i).toBe(0)
         async.reject(1)
         expect(i).toBe(1)
@@ -463,7 +463,7 @@ describe('Async', () => {
       test('on', () => {
         const async = new Async()
         let i = 0
-        const listener = value => i = value
+        const listener = () => i = async.value
         async.on('resolve', listener)
         expect(i).toBe(0)
         async.resolve(1)
@@ -475,7 +475,7 @@ describe('Async', () => {
       test('once', () => {
         const async = new Async()
         let i = 0
-        const listener = value => i = value
+        const listener = () => i = async.value
         async.once('resolve', listener)
         async.off('resolve', listener)
         expect(i).toBe(0)
@@ -654,9 +654,6 @@ describe('Async', () => {
       })
       test.resolve({test: 1})
       test1.resolve(() => ({test: 1}))
-      test.on('resolve', value => value.test)
-      test.once('resolve', value => value.test)
-      test.trigger('resolve', {test: 2})
     })
     test('reject', () => {
       const test = new Async<string, {test: number}>((resolve, reject) => reject({test: 1}))
@@ -684,9 +681,6 @@ describe('Async', () => {
       })
       test.reject({test: 1})
       test1.reject(() => ({test: 1}))
-      test.on('reject', value => value.test)
-      test.once('reject', value => value.test)
-      test.trigger('reject', {test: 2})
     })
     test('async away', async () => {
       const test1 = await new Async<{test: number}>()
