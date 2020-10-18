@@ -5,6 +5,8 @@ type AsyncValue <V = any> = V | (() => V)
 type AsyncResolve <V = any> = (value: AsyncValue<V>) => AsyncValue<V>
 type AsyncReject <E = any> = (error: AsyncValue<E>) => AsyncValue<E>
 
+type AsyncThen <V> = (value: V) => any
+
 type AsyncFunction <V = any, E = any> = (resolve: AsyncResolve<V>, reject: AsyncReject<E>) => void
 
 type AsyncEvent <V = any> = (value: V, BREAK: symbol) => any
@@ -33,7 +35,9 @@ class Async <V = any, E = any> {
   protected updated: boolean = true
   protected timeout: number
 
-  constructor (options: AsyncFunction<V, E> | AsyncOptions <V, E> = {}) {
+  constructor (request?: AsyncFunction<V, E>)
+  constructor (options?: AsyncOptions<V, E>)
+  constructor (options: AsyncFunction<V, E> | AsyncOptions<V, E> = {}) {
     this.options = typeof options === 'function' ? {request: options} : options
     this.update()
   }
@@ -46,6 +50,7 @@ class Async <V = any, E = any> {
 
   update (timeout: number = this.options.timeout): this {
     const {options} = this
+    if (!options.request) return this
     if (timeout && this.timeout + timeout > Date.now()) return this
     if (options.loading === true) return this
     this.updated = false
@@ -127,14 +132,19 @@ class Async <V = any, E = any> {
     return this.options.events
   }
 
+  private startEvent (event: string) {
+    const {events} = this
+    if (!events[event]) {
+      events[event] = new Set()
+    }
+  }
+
   on (event: 'resolve', callback: AsyncEvent<V>): this
   on (event: 'reject', callback: AsyncEvent<E>): this
   on (event: 'update', callback: AsyncEvent<undefined>): this
   on (event: string, callback: AsyncEvent): this {
     const {events} = this
-    if (!events[event]) {
-      events[event] = new Set()
-    }
+    this.startEvent(event)
     callback[ONCE] = false
     events[event].add(callback)
     return this
@@ -143,11 +153,9 @@ class Async <V = any, E = any> {
   once (event: 'resolve', callback: AsyncEvent<V>): this
   once (event: 'reject', callback: AsyncEvent<E>): this
   once (event: 'update', callback: AsyncEvent<undefined>): this
-  once (event:string, callback: AsyncEvent): this {
+  once (event: string, callback: AsyncEvent): this {
     const {events} = this
-    if (!events[event]) {
-      events[event] = new Set()
-    }
+    this.startEvent(event)
     callback[ONCE] = true
     events[event].add(callback)
     return this
@@ -163,8 +171,8 @@ class Async <V = any, E = any> {
     return this
   }
 
-  trigger (event: 'resolve', details?: AsyncValue<V>): this
-  trigger (event: 'reject', details?: AsyncValue<E>): this
+  trigger (event: 'resolve', details: AsyncValue<V>): this
+  trigger (event: 'reject', details: AsyncValue<E>): this
   trigger (event: 'update'): this
   trigger (event: string, details?): this {
     const {options} = this
@@ -173,88 +181,45 @@ class Async <V = any, E = any> {
       if(listener[ONCE]) {
         options.events[event].delete(listener)
       }
-      if (listener(details, AsyncBreak) === AsyncBreak) break
+      if (listener(details, AsyncBreak) === AsyncBreak) {
+        break
+      }
     }
     return this
   }
 
   // promise system
-  then (resolve: AsyncResolve, reject?: boolean | AsyncReject, reusable?: boolean): Async {
-    this.call()
-    if (reject === true) {
-      reject = undefined
-      reusable = true
+  then (resolve?: AsyncThen<V>, reject?: AsyncThen<E>): Promise<V> {
+    const {options} = this
+    if (options.loading) {} else {
+      this.response
     }
-
-    const async = new Async()
-
-    const onResolve = resolve ? data => {
-      const result = resolve(data)
-      if (result instanceof Promise) {
-        result.then(async.resolve, async.reject)
-      } else if (result instanceof Async) {
-        if (!result.loading) {
-          if (result.error === undefined) {
-            async.resolve(result.response)
-          } else {
-            async.reject(result.error)
-          }
+    return new Promise((res, rej) => {
+      const finish = () => {
+        if (this.error) {
+          rej(this.error)
         } else {
-          result.once('resolve', async.resolve)
-          result.once('reject', async.reject)
+          res(this.value)
         }
-      } else {
-        async.resolve(result)
       }
-    } : async.resolve
-    const onReject = reject ? err => {
-      // @ts-ignore
-      const result = reject(err)
-      if (result instanceof Promise) {
-        result.then(async.resolve, async.reject)
-      } if (result instanceof Async) {
-        if (!result.loading) {
-          if (result.error === undefined) {
-            async.resolve(result.response)
-          } else {
-            async.reject(result.error)
-          }
-        } else {
-          result.once('resolve', async.resolve)
-          result.once('reject', async.reject)
+      if (this.loading) {
+        const listener = () => {
+          finish()
+          this.off('resolve', listener)
+          this.off('reject', listener)
         }
+        this.once('resolve', listener)
+        this.once('reject', listener)
       } else {
-        async.reject(result)
+        finish()
       }
-    } : async.reject
-
-    const {loading} = this.options
-
-    if (!loading) {
-      if (this.options.error) {
-        onReject(this.options.error)
-      } else {
-        onResolve(this.options.response)
-      }
-    }
-    if (reusable) {
-      this.on('update', async.update.bind(async))
-      this.on('resolve', onResolve)
-      this.on('reject', onReject)
-      async.update = this.update.bind(this)
-    } else if (loading) {
-      this.once('update', async.update.bind(async))
-      this.once('resolve', onResolve)
-      this.once('reject', onReject)
-      async.update = this.update.bind(this)
-    }
-    return async
+    }).then(resolve, reject)
   }
-  catch (reject: AsyncReject, reusable?: boolean): Async {
-    return this.then(undefined, reject, reusable)
+  catch (reject?: AsyncThen<E>): Promise<V> {
+    return this.then(undefined, reject)
   }
-  finally (fin: AsyncResolve | AsyncReject, reusable?: boolean): Async {
-    return this.then(fin, fin, reusable)
+  finally (fin?: AsyncThen<V> | AsyncThen<E>): Promise<V> {
+    return this.then(fin as AsyncThen<V>, fin as AsyncThen<E>)
   }
 }
 
