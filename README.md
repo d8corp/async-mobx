@@ -132,6 +132,13 @@ const promise = new Async(resolve => resolve(i++))
 promise.update()
 // i === 2
 ```
+### reset
+The method just sets default value as current and clears `error`
+```javascript
+const promise = new Async({default: 1})
+promise.resolve(2) // promise.value = 2
+promise.reset() // promise.value = 1
+```
 ### resolve
 You may use `resolve` to say async that loading is finished successfully
 ```javascript
@@ -147,11 +154,12 @@ promise.reject(1)
 // promise.error === 1
 ```
 ### on, once, off
-You may add a listener to react on events
+You may add a listener to react on events.  
+Use `resolve`, `reject` or `update` as a type of event.
 ```javascript
 const promise = new Async()
 let test = false
-promise.on('resolve', value => test = value)
+promise.on('resolve', () => test = promise.value)
 // test === false
 promise.resolve(true)
 // test === true
@@ -162,7 +170,7 @@ You may add a listener which reacts only once with `once`
 ```javascript
 const promise = new Async()
 let test = false
-promise.once('resolve', value => test = value)
+promise.once('resolve', () => test = promise.value)
 // test === false
 promise.resolve(true)
 // test === true
@@ -173,7 +181,7 @@ You may turn off a listener
 ```javascript
 const promise = new Async()
 let test = false
-const listener = value => test = value
+const listener = () => test = promise.value
 promise.on('resolve', listener)
 // test === false
 promise.resolve(true)
